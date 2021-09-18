@@ -50,6 +50,7 @@ public class FlinkCDCApp {
 
     }
 
+
     public static class MySerializer implements DebeziumDeserializationSchema<String> {
 
         @Override
@@ -112,7 +113,6 @@ public class FlinkCDCApp {
             result.put("data",data);
             result.put("beforeData",beforeData);
             result.put("Type",lowerCase);
-
 
             //收集并返回需要的对象格式
             collector.collect(result.toJSONString());
