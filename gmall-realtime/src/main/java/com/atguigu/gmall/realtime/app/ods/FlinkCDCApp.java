@@ -68,7 +68,6 @@ public class FlinkCDCApp {
             String dataBase = split[1];
             String tableName = split[2];
 
-
             Struct value = (Struct) sourceRecord.value();
             //这个是数据体
             JSONObject data = new JSONObject();
