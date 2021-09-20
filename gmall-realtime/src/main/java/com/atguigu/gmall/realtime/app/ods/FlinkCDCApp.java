@@ -1,12 +1,13 @@
-package com.atguigu.gmall.realtime.app;
+package com.atguigu.gmall.realtime.app.ods;
 
 import com.alibaba.fastjson.JSONObject;
+
 import com.alibaba.ververica.cdc.connectors.mysql.MySQLSource;
 import com.alibaba.ververica.cdc.connectors.mysql.table.StartupOptions;
 import com.alibaba.ververica.cdc.debezium.DebeziumDeserializationSchema;
 import com.alibaba.ververica.cdc.debezium.DebeziumSourceFunction;
 import com.atguigu.gmall.realtime.utils.MyKafkaUtil;
-import com.mysql.jdbc.MySQLConnection;
+
 import io.debezium.data.Envelope;
 import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
@@ -18,10 +19,13 @@ import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.source.SourceRecord;
 
+
 import java.util.List;
 
 
 /**
+ * 从mysql中监控并读取数据，保存在kafka中ods_base_db主题
+ *
  * @author wang
  * @create 2021-09-18 9:02
  */
