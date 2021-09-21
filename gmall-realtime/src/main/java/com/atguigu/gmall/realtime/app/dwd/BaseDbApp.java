@@ -5,6 +5,9 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.ververica.cdc.connectors.mysql.MySQLSource;
 import com.alibaba.ververica.cdc.connectors.mysql.table.StartupOptions;
 import com.alibaba.ververica.cdc.debezium.DebeziumSourceFunction;
+import com.atguigu.gmall.realtime.app.Func.DimSinkFun;
+import com.atguigu.gmall.realtime.app.Func.MyStringDeserializationSchema;
+import com.atguigu.gmall.realtime.app.Func.TableProcessFunction;
 import com.atguigu.gmall.realtime.app.ods.FlinkCDCApp;
 import com.atguigu.gmall.realtime.bean.TableProcess;
 import com.atguigu.gmall.realtime.utils.MyKafkaUtil;
@@ -12,18 +15,29 @@ import com.atguigu.gmall.realtime.utils.MyKafkaUtil;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.state.MapStateDescriptor;
 import org.apache.flink.runtime.state.filesystem.FsStateBackend;
-import org.apache.flink.streaming.api.datastream.DataStreamSource;
-import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
+import org.apache.flink.streaming.api.datastream.*;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.ProcessFunction;
+import org.apache.flink.streaming.api.functions.co.BroadcastProcessFunction;
+import org.apache.flink.streaming.connectors.kafka.KafkaSerializationSchema;
 import org.apache.flink.util.Collector;
+import org.apache.flink.util.OutputTag;
+import org.apache.kafka.clients.producer.ProducerRecord;
+
+import javax.annotation.Nullable;
 
 /**
  * @author wang
  * @create 2021-09-19 22:47
  */
+//数据流：web/app -》 nginx ——》springboot --》mysql——》flinkcdc -》kafka（ods）
+//        -》flinkapp ->kafka(dwd)/phonix(dim)
+
+//程序：mock-》mysql->flinkcdc ->kafka(ods) ->baserlogapp->kafka(log三张表)——》basedbLog
+//     -》kafka（各主题的topic）/phonix（hbase的各个表）
+
 public class BaseDbApp {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment environment = StreamExecutionEnvironment.getExecutionEnvironment().setParallelism(1);
 
         //checkPoint
@@ -53,15 +67,48 @@ public class BaseDbApp {
                 .databaseList("gmall-realtime")
                 .tableList("gmall-realtime.table_process")
                 .startupOptions(StartupOptions.initial())
-                .deserializer(new FlinkCDCApp.MySerializer())
+                .deserializer(new MyStringDeserializationSchema())
                 .build();
 
         //分装成广播流
         DataStreamSource<String> tableProcessDS = environment.addSource(tableProcessSourceFun);
         MapStateDescriptor<String, TableProcess> mapStateDescriptor = new MapStateDescriptor<>("map-state", String.class, TableProcess.class);
 
-        tableProcessDS.broadcast();
+        BroadcastStream<String> broadcastStream = tableProcessDS.broadcast(mapStateDescriptor);
 
+        //流的连接
+        BroadcastConnectedStream<JSONObject, String> broadcastConnectedStream = jsonDstream.connect(broadcastStream);
+        //对连接后的流进行分流处理
+        OutputTag<JSONObject> hbaseTag = new OutputTag<JSONObject>("hbaseTag") {
+        };
+        //数据分流处理（建表，过滤数据）
+        SingleOutputStreamOperator<JSONObject> mainDS = broadcastConnectedStream.process(new TableProcessFunction(mapStateDescriptor, hbaseTag));
+
+        //处理连接流数据
+        DataStream<JSONObject> hbaseOutput = mainDS.getSideOutput(hbaseTag);
+
+        //打印
+        hbaseOutput.print("hbaseTag>>>>>>>>");
+        mainDS.print("kafka》》》》");
+
+
+        //数据传递到kfaka/hbase
+        //到hbase
+        DataStreamSink<JSONObject> dataStreamSink = hbaseOutput.addSink(new DimSinkFun());
+
+        //到kafka
+        mainDS.addSink(MyKafkaUtil.getKafkaConsumerSink(new KafkaSerializationSchema<JSONObject>() {
+            @Override
+            //kafka数据反序列化
+            public ProducerRecord<byte[], byte[]> serialize(JSONObject jsonObject,@Nullable Long aLong) {
+                return new ProducerRecord<>(jsonObject.getString("sinkTable"),
+                        jsonObject.getString("data").getBytes());
+            }
+        }));
+
+
+        //程序执行启动
+        environment.execute();
 
     }
 }

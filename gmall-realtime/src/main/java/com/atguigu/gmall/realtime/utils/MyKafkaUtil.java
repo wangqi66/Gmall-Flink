@@ -4,7 +4,9 @@ import org.apache.flink.api.common.serialization.SerializationSchema;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer;
+import org.apache.flink.streaming.connectors.kafka.KafkaSerializationSchema;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
 
 import java.util.Properties;
 
@@ -17,12 +19,15 @@ public class MyKafkaUtil {
     private static String KAFKA_SERVER = "hadoop102:9092,hadoop103:9092,hadoop104:9092";
     private static Properties properties = new Properties();
 
+    private  static String deafultTopic = "dwd_default";
+
     static {
         properties.setProperty("bootstrap.servers", KAFKA_SERVER);
     }
 
     /**
      * 创建 kafkasink
+     *
      * @param topic
      * @return
      */
@@ -31,7 +36,22 @@ public class MyKafkaUtil {
     }
 
     /**
+     * 创建 kafka生产者sink（将数据写入kafka的各个分区主题）
+     * @param
+     * @return
+     */
+
+    public static <T> FlinkKafkaProducer<T> getKafkaConsumerSink(KafkaSerializationSchema<T> kafkaSerializationSchema) {
+        properties.setProperty(ProducerConfig.ACKS_CONFIG,"1");
+        return new FlinkKafkaProducer<T>(deafultTopic,kafkaSerializationSchema,
+                properties,
+                FlinkKafkaProducer.Semantic.EXACTLY_ONCE);
+
+    }
+
+    /**
      * 获取KafkaSource的方法
+     *
      * @param topic   主题
      * @param groupId 消费者组
      */

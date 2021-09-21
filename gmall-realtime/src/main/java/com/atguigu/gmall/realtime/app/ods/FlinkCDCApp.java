@@ -48,6 +48,7 @@ public class FlinkCDCApp {
         DataStreamSource<String> streamSource = environment.addSource(mysqlSource);
 
         //获取kafka的sink
+        streamSource.print();
         streamSource.addSink(MyKafkaUtil.getKafkaSink("ods_base_db"));
         //程序执行
         environment.execute();
@@ -115,7 +116,7 @@ public class FlinkCDCApp {
             result.put("tableName",tableName);
             result.put("data",data);
             result.put("beforeData",beforeData);
-            result.put("Type",lowerCase);
+            result.put("type",lowerCase);
 
             //收集并返回需要的对象格式
             collector.collect(result.toJSONString());
