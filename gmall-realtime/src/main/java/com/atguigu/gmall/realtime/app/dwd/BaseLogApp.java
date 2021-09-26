@@ -5,8 +5,10 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.atguigu.gmall.realtime.utils.MyKafkaUtil;
 import org.apache.flink.api.common.functions.RichMapFunction;
+import org.apache.flink.api.common.state.StateTtlConfig;
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
+import org.apache.flink.api.common.time.Time;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.runtime.state.filesystem.FsStateBackend;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -87,7 +89,17 @@ public class BaseLogApp {
 
             @Override
             public void open(Configuration conf) throws Exception {
-                valueState = getRuntimeContext().getState(new ValueStateDescriptor<String>("new_state", String.class));
+                ValueStateDescriptor<String> stateDescriptor = new ValueStateDescriptor<>("new_state", String.class);
+                //ttl设置过期时间，来将前一天的额数据进行清空，因为本需求是根据每天的数据来进行获取的，故前一天的数据已不需要
+                StateTtlConfig stateTtlConfig = new StateTtlConfig.Builder(Time.hours(24))
+                        //设置个更新模式，当又发生变动后，就进行将改数据继续保留24小时
+                        .setUpdateType(StateTtlConfig.UpdateType.OnCreateAndWrite)
+                        .build();
+
+                stateDescriptor.enableTimeToLive(stateTtlConfig);
+
+
+                valueState = getRuntimeContext().getState(stateDescriptor);
             }
 
             @Override

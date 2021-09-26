@@ -112,10 +112,10 @@ public class FlinkCDCApp {
             }
 
             //将数据真正整合到对象
-            result.put("dataBase",dataBase);
+            result.put("database",dataBase);
             result.put("tableName",tableName);
             result.put("data",data);
-            result.put("beforeData",beforeData);
+            result.put("before",beforeData);
             result.put("type",lowerCase);
 
             //收集并返回需要的对象格式
