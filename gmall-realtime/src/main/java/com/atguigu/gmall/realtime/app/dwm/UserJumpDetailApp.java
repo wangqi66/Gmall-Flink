@@ -42,7 +42,7 @@ public class UserJumpDetailApp {
         DataStreamSource<String> dataStreamSource = environment.addSource(MyKafkaUtil.getKafkaSource("dwd_page_log", "page_dantiao"));
 
         //转换为hjsonobject并分组
-        SingleOutputStreamOperator<JSONObject> jsonobjDS = dataStreamSource.map(js -> JSON.parseObject(js));
+        SingleOutputStreamOperator<JSONObject> jsonobjDS = dataStreamSource.map(js -> JSONObject.parseObject(js));
         //定义watermark
         KeyedStream<JSONObject, String> keyedStream = jsonobjDS.assignTimestampsAndWatermarks(WatermarkStrategy
                 .<JSONObject>forBoundedOutOfOrderness(Duration.ofSeconds(1)).withTimestampAssigner(new SerializableTimestampAssigner<JSONObject>() {
