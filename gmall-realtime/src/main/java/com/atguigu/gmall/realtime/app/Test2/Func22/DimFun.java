@@ -1,9 +1,8 @@
-package com.atguigu.gmall.realtime.app.Func22;
+package com.atguigu.gmall.realtime.app.Test2.Func22;
 
 import com.alibaba.fastjson.JSONObject;
 import com.atguigu.gmall.realtime.common.GmallConfig;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 

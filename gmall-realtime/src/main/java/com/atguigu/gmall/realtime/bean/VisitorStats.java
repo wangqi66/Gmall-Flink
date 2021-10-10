@@ -1,7 +1,10 @@
 package com.atguigu.gmall.realtime.bean;
 
+import com.atguigu.gmall.realtime.utils.TransientSink;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+
+import java.beans.Transient;
 
 /**
  * @author wang
@@ -11,6 +14,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class VisitorStats {
     //统计开始时间
+//    @TransientSink
     private String stt;
     //统计结束时间
     private String edt;

@@ -1,4 +1,4 @@
-package com.atguigu.gmall.realtime.app.dwd22;
+package com.atguigu.gmall.realtime.app.Test2.dwd22;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -7,7 +7,7 @@ import com.alibaba.ververica.cdc.connectors.mysql.table.StartupOptions;
 import com.alibaba.ververica.cdc.debezium.DebeziumSourceFunction;
 import com.atguigu.gmall.realtime.app.Func.DimSinkFun;
 import com.atguigu.gmall.realtime.app.Func.MyStringDeserializationSchema;
-import com.atguigu.gmall.realtime.app.Func22.tableProcessFun;
+import com.atguigu.gmall.realtime.app.Test2.Func22.tableProcessFun;
 import com.atguigu.gmall.realtime.bean.TableProcess;
 import com.atguigu.gmall.realtime.utils22.KU;
 import com.atguigu.gmall.realtime.utils.MyKafkaUtil;

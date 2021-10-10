@@ -116,6 +116,7 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
             //数据写入hbase(传递到下游（侧输出流）)
             //写入hbase的数据需要目标表名，故需要写出去
             value.put("sinkTable",tableProcess.getSinkTable());
+
             if (TableProcess.SINK_TYPE_HBASE.equals(tableProcess.getSinkType())) {
                 ctx.output(hbaseTag,value);
             } else if (TableProcess.SINK_TYPE_KAFKA.equals(tableProcess.getSinkType())) {

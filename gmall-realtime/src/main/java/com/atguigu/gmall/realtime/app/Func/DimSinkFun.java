@@ -51,7 +51,6 @@ public class DimSinkFun extends RichSinkFunction<JSONObject> {
                 DimUtil.deleteRedisData(redisKey);
             }
 
-
             statement.execute();
             connection.commit();
         } catch (SQLException throwables) {

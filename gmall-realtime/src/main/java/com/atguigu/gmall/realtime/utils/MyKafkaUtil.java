@@ -19,7 +19,7 @@ public class MyKafkaUtil {
     private static String KAFKA_SERVER = "hadoop102:9092,hadoop103:9092,hadoop104:9092";
     private static Properties properties = new Properties();
 
-    private  static String deafultTopic = "dwd_default";
+    private static String deafultTopic = "dwd_default";
 
     static {
         properties.setProperty("bootstrap.servers", KAFKA_SERVER);
@@ -37,13 +37,14 @@ public class MyKafkaUtil {
 
     /**
      * 创建 kafka生产者sink（将数据写入kafka的各个分区主题）
+     *
      * @param
      * @return
      */
 
     public static <T> FlinkKafkaProducer<T> getKafkaConsumerSink(KafkaSerializationSchema<T> kafkaSerializationSchema) {
-        properties.setProperty(ProducerConfig.ACKS_CONFIG,"1");
-        return new FlinkKafkaProducer<T>(deafultTopic,kafkaSerializationSchema,
+        properties.setProperty(ProducerConfig.ACKS_CONFIG, "1");
+        return new FlinkKafkaProducer<T>(deafultTopic, kafkaSerializationSchema,
                 properties,
                 FlinkKafkaProducer.Semantic.EXACTLY_ONCE);
 
@@ -61,6 +62,19 @@ public class MyKafkaUtil {
         //获取KafkaSource
         return new FlinkKafkaConsumer<String>(topic, new SimpleStringSchema(), properties);
     }
+
+
+    public static String getKafkaDDL(String topic, String groupId) {
+        return "WITH('connector' = 'kafka', " +
+                " 'topic' = '" + topic + "'," +
+                " 'properties.bootstrap.servers' = '" + KAFKA_SERVER + "', " +
+                " 'properties.group.id' = '" + groupId + "', " +
+                "  'format' = 'json', " +
+                "  'scan.startup.mode' = 'latest-offset')";
+
+    }
+
+
 
 
 }

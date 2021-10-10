@@ -1,4 +1,4 @@
-package com.atguigu.gmall.realtime.app.Func22;
+package com.atguigu.gmall.realtime.app.Test2.Func22;
 
 
 import com.alibaba.fastjson.JSON;

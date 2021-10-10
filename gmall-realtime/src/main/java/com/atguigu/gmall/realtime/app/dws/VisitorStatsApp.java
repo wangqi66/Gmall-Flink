@@ -3,8 +3,10 @@ package com.atguigu.gmall.realtime.app.dws;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.atguigu.gmall.realtime.bean.VisitorStats;
+import com.atguigu.gmall.realtime.utils.ClickHouseUtil;
 import com.atguigu.gmall.realtime.utils.DateTimeUtil;
 import com.atguigu.gmall.realtime.utils.MyKafkaUtil;
+import com.atguigu.gmall.realtime.utils22.ClickUT;
 import org.apache.flink.api.common.eventtime.SerializableTimestampAssigner;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
@@ -21,6 +23,7 @@ import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.util.Collector;
 
 
+import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.Date;
 
@@ -139,11 +142,11 @@ public class VisitorStatsApp {
         SingleOutputStreamOperator<VisitorStats> reduceDS = window.reduce(new ReduceFunction<VisitorStats>() {
             @Override
             public VisitorStats reduce(VisitorStats value1, VisitorStats value2) throws Exception {
-                value1.setPv_ct(value1.getPv_ct() + value2.getPv_ct());
                 value1.setUv_ct(value1.getUv_ct() + value2.getUv_ct());
-                value1.setUj_ct(value1.getUj_ct() + value2.getUj_ct());
-                value1.setSv_ct(value1.getSv_ct() + value2.getSv_ct());
+                value1.setPv_ct(value1.getPv_ct() + value2.getPv_ct());
                 value1.setDur_sum(value1.getDur_sum() + value2.getDur_sum());
+                value1.setSv_ct(value1.getSv_ct() + value2.getSv_ct());
+                value1.setUj_ct(value1.getUj_ct() + value2.getUj_ct());
                 return value1;
             }
         }, new WindowFunction<VisitorStats, VisitorStats, Tuple4<String, String, String, String>, TimeWindow>() {
@@ -152,12 +155,12 @@ public class VisitorStatsApp {
                 //取出聚合后的数据
                 VisitorStats visitorStats = input.iterator().next();
 
-                String stt = DateTimeUtil.toYMDhms(new Date(window.getStart()));
-                String edt = DateTimeUtil.toYMDhms(new Date(window.getEnd()));
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
+                String stt = sdf.format(window.getStart());
+                String edt = sdf.format(window.getEnd());
                 visitorStats.setStt(stt);
                 visitorStats.setEdt(edt);
-
                 //输出数据
                 out.collect(visitorStats);
 
@@ -169,9 +172,7 @@ public class VisitorStatsApp {
 
 
         //将数据写入clickhouse
-
-
-
+        reduceDS.addSink(ClickHouseUtil.getSink("insert into visitor_stats_2021 values(?,?,?,?,?,?,?,?,?,?,?,?)"));
 
         //启动任务
         environment.execute();
